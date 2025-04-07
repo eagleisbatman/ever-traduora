@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import * as xmlJs from 'xml-js';
 import { Exporter, IntermediateTranslation, IntermediateTranslationFormat, Parser } from '../domain/formatters';
 
@@ -35,7 +37,7 @@ export const resXParser: Parser = async (data: string) => {
 
 export const resXExporter: Exporter = async (data: IntermediateTranslationFormat) => {
   const strings = data.translations.map(translation => ({
-    _attributes: { 'name': translation.term, 'xml:space': 'preserve' },
+    _attributes: { name: translation.term, 'xml:space': 'preserve' },
     value: escape(translation.translation),
   }));
   const xml = xmlJs.js2xml(
@@ -43,7 +45,7 @@ export const resXExporter: Exporter = async (data: IntermediateTranslationFormat
       _declaration: { _attributes: { version: '1.0', encoding: 'utf-8' } },
       root: {
         'xsd:schema': getXsdSchema(),
-        'resheader': [
+        resheader: [
           {
             _attributes: { name: 'resmimetype' },
             value: 'text/microsoft-resx',
@@ -61,7 +63,7 @@ export const resXExporter: Exporter = async (data: IntermediateTranslationFormat
             value: 'System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089',
           },
         ],
-        'data': strings,
+        data: strings,
       },
     },
     { compact: true, spaces: 2 },
@@ -79,17 +81,16 @@ function escape(str: string): string {
 
 function getXsdSchema(): any {
   return {
-    '_attributes': { 'id': 'root', 'xmlns': '', 'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
-      'xmlns:msdata': 'urn:schemas-microsoft-com:xml-msdata' },
+    _attributes: { id: 'root', xmlns: '', 'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema', 'xmlns:msdata': 'urn:schemas-microsoft-com:xml-msdata' },
     'xsd:import': { _attributes: { namespace: 'http://www.w3.org/XML/1998/namespace' } },
     'xsd:element': {
-      '_attributes': { 'name': 'root', 'msdata:IsDataSet': 'true' },
+      _attributes: { name: 'root', 'msdata:IsDataSet': 'true' },
       'xsd:complexType': {
         'xsd:choice': {
-          '_attributes': { maxOccurs: 'unbounded' },
+          _attributes: { maxOccurs: 'unbounded' },
           'xsd:element': [
             {
-              '_attributes': { name: 'metadata' },
+              _attributes: { name: 'metadata' },
               'xsd:complexType': {
                 'xsd:sequence': { 'xsd:element': { _attributes: { name: 'value', type: 'xsd:string', minOccurs: '0' } } },
                 'xsd:attribute': [
@@ -101,33 +102,32 @@ function getXsdSchema(): any {
               },
             },
             {
-              '_attributes': { name: 'assembly' },
+              _attributes: { name: 'assembly' },
               'xsd:complexType': {
                 'xsd:attribute': [{ _attributes: { name: 'alias', type: 'xsd:string' } }, { _attributes: { name: 'name', type: 'xsd:string' } }],
               },
             },
             {
-              '_attributes': { name: 'data' },
+              _attributes: { name: 'data' },
               'xsd:complexType': {
                 'xsd:sequence': {
                   'xsd:element': [
-                    { _attributes: { 'name': 'value', 'type': 'xsd:string', 'minOccurs': '0', 'msdata:Ordinal': '1' } },
-                    { _attributes: { 'name': 'comment', 'type': 'xsd:string', 'minOccurs': '0', 'msdata:Ordinal': '2' } },
+                    { _attributes: { name: 'value', type: 'xsd:string', minOccurs: '0', 'msdata:Ordinal': '1' } },
+                    { _attributes: { name: 'comment', type: 'xsd:string', minOccurs: '0', 'msdata:Ordinal': '2' } },
                   ],
                 },
                 'xsd:attribute': [
-                  { _attributes: { 'name': 'name', 'type': 'xsd:string', 'use': 'required', 'msdata:Ordinal': '1' } },
-                  { _attributes: { 'name': 'type', 'type': 'xsd:string', 'msdata:Ordinal': '3' } },
-                  { _attributes: { 'name': 'mimetype', 'type': 'xsd:string', 'msdata:Ordinal': '4' } },
+                  { _attributes: { name: 'name', type: 'xsd:string', use: 'required', 'msdata:Ordinal': '1' } },
+                  { _attributes: { name: 'type', type: 'xsd:string', 'msdata:Ordinal': '3' } },
+                  { _attributes: { name: 'mimetype', type: 'xsd:string', 'msdata:Ordinal': '4' } },
                   { _attributes: { ref: 'xml:space' } },
                 ],
               },
             },
             {
-              '_attributes': { name: 'resheader' },
+              _attributes: { name: 'resheader' },
               'xsd:complexType': {
-                'xsd:sequence': { 'xsd:element':
-                  { _attributes: { 'name': 'value', 'type': 'xsd:string', 'minOccurs': '0', 'msdata:Ordinal': '1' } } },
+                'xsd:sequence': { 'xsd:element': { _attributes: { name: 'value', type: 'xsd:string', minOccurs: '0', 'msdata:Ordinal': '1' } } },
                 'xsd:attribute': { _attributes: { name: 'name', type: 'xsd:string', use: 'required' } },
               },
             },
