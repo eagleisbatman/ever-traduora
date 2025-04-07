@@ -22,7 +22,7 @@ export class UserService {
     private readonly loginAttemptsStorage: UserLoginAttemptsStorage,
     private readonly configService: ConfigService,
   ) {
-    this.loginAttemptsTTL = this.configService.get<number>('LOGIN_ATTEMPTS_TTL', 900); //15 minutes TTL by default
+    this.loginAttemptsTTL = this.configService.get<number>('LOGIN_ATTEMPTS_TTL', 900); // 15 minutes TTL by default
   }
 
   async userExists(email: string): Promise<boolean> {
