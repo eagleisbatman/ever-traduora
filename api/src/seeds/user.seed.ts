@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as chalk from 'chalk';
-import type { User } from 'entity/user.entity';
-import { UserService } from 'services/user.service';
-import { GrantType } from 'domain/http';
+import type { User } from '../entity/user.entity';
+import { UserService } from '../services/user.service';
+import { GrantType } from '../domain/http';
 import { config } from '../config';
 
 /**
