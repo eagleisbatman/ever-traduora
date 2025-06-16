@@ -69,7 +69,7 @@ export const config = {
       keepConnectionAlive: true,
       entities: ['src/entity/*.entity*'],
       migrations: ['src/migrations/*'],
-      namingStrategy: env.TR_DB_TYPE === 'postgres' ? new SnakeNamingStrategy() : new DefaultNamingStrategy(),
+      namingStrategy: env.TR_DB_TYPE === 'postgres' || env.TR_DB_TYPE === 'better-sqlite3' ? new SnakeNamingStrategy() : new DefaultNamingStrategy(),
     } as TypeOrmModuleOptions,
   },
 

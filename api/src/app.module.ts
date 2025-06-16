@@ -48,6 +48,7 @@ import { UserLoginAttemptsStorage } from './redis/user-login-attempts.storage';
 import { CustomThrottlerGuard } from './guards/custom-throttler.guard';
 import { SeedDataService } from './seeds/seed-data.service';
 import { UserSeed } from './seeds/user.seed';
+import { dataSourceOptions } from './connection/datasource';
 
 @Module({
   imports: [
@@ -61,7 +62,9 @@ import { UserSeed } from './seeds/user.seed';
     ThrottlerModule.forRoot([{ ttl: config.throttle.global.ttl, limit: config.throttle.global.limit }]),
     ConfigModule.forRoot({ isGlobal: true }),
     RedisModule,
-    TypeOrmModule.forRoot(config.db.default),
+    TypeOrmModule.forRootAsync({
+      useFactory: async () => dataSourceOptions(),
+    }),
     TypeOrmModule.forFeature([User, Invite, ProjectUser, Project, Term, Locale, ProjectLocale, Translation, ProjectClient, Plan, Label]),
     HttpModule,
   ],

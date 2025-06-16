@@ -1,5 +1,4 @@
 import { NestFactory } from '@nestjs/core';
-import { Connection } from 'typeorm';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ExpressAdapter, NestExpressApplication } from '@nestjs/platform-express';
 import { version } from '../package.json';
@@ -9,8 +8,9 @@ import { Closable } from './types';
 import { config } from './config';
 import { addPipesAndFilters, AppModule } from './app.module';
 import { SeedDataService } from './seeds/seed-data.service';
-
 import * as chalk from 'chalk';
+import { getDataSourceConnection } from './connection/datasource';
+import { getDbType } from './utils/database-type-helper';
 
 const closables: Closable[] = [];
 
@@ -24,11 +24,14 @@ async function bootstrap() {
   addPipesAndFilters(app);
   closables.push(app);
 
+  // Get current database type
+  const dbType = getDbType();
+
   // Run migrations
   if (config.autoMigrate) {
     console.log('Running DB migrations if necessary');
-    const connection = app.get(Connection);
-    await connection.runMigrations();
+    const dataSource = await getDataSourceConnection();
+    await dataSource.runMigrations();
     console.log('DB migrations up to date');
   }
 
@@ -71,6 +74,7 @@ async function bootstrap() {
   }
 
   await app.listen(port, host, () => {
+    console.log(`Using database type: ${dbType}`);
     console.log(`Listening at http://${host}:${port}`);
   });
 }
