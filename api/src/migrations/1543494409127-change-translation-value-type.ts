@@ -55,8 +55,8 @@ export class changeTranslationValueType1543494409127 implements MigrationInterfa
         break;
       default:
         throw new Error(`Unsupported DB type "${config.db.default.type}" in migration 1543494409127`);
+    }
   }
-
   public async down(queryRunner: QueryRunner): Promise<any> {
     switch (config.db.default.type) {
       case DbType.POSTGRES:
