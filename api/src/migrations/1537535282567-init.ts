@@ -6,6 +6,8 @@ export class init1537535282567 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
     switch (config.db.default.type) {
       case DbType.POSTGRES:
+        // Enable UUID extension for PostgreSQL
+        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
         await queryRunner.query(
           `CREATE TABLE IF NOT EXISTS "project" ("id" uuid DEFAULT uuid_generate_v4 (), "name" varchar(255) NOT NULL, "date_created" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, "date_modified" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY ("id"));`,
         );
@@ -180,7 +182,7 @@ export class init1537535282567 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_translation_project_locale_id" ON "translation" ("project_locale_id")`);
         break;
       default:
-        console.log('Unknown DB type');
+        throw new Error(`Unknown DB type: ${config.db.default.type}`);
     }
   }
 
@@ -235,7 +237,7 @@ export class init1537535282567 implements MigrationInterface {
         await queryRunner.query('DROP TABLE IF EXISTS "project"');
         break;
       default:
-        console.log('Unknown DB type');
+        throw new Error(`Unknown DB type: ${config.db.default.type}`);
     }
   }
 }

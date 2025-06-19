@@ -29,12 +29,15 @@ async function bootstrap() {
 
   // Run migrations
   if (config.autoMigrate) {
-    console.log('Running DB migrations if necessary');
-    const dataSource = await getDataSourceConnection();
-    await dataSource.runMigrations();
-    console.log('DB migrations up to date');
+    try {
+      const dataSource = await getDataSourceConnection();
+      await dataSource.runMigrations();
+      console.log('DB migrations up to date');
+    } catch (error) {
+      console.error(`Failed to run migrations: ${error.message}`);
+      process.exit(1);
+    }
   }
-
   if (config.seedData) {
     console.log(chalk.yellow('🌱 Seeding initial data...'));
     const seedService = app.get(SeedDataService);

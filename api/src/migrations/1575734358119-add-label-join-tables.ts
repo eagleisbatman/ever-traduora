@@ -101,9 +101,9 @@ export class addLabelJoinTables1575734358119 implements MigrationInterface {
 
         await queryRunner.query(
           `CREATE TABLE IF NOT EXISTS "label_translations_translation" (
-            "label_id"  TEXT NOT NULL DEFAULT (hex(randomblob(16))),
-            "translation_term_id"  TEXT NOT NULL DEFAULT (hex(randomblob(16))),
-            "translation_project_locale_id"  TEXT NOT NULL DEFAULT (hex(randomblob(16))),
+            "label_id"  TEXT NOT NULL,
+            "translation_term_id"  TEXT NOT NULL,
+            "translation_project_locale_id"  TEXT NOT NULL,
             PRIMARY KEY ("label_id", "translation_term_id", "translation_project_locale_id"),
             FOREIGN KEY ("label_id") REFERENCES "label"("id") ON DELETE CASCADE,
             FOREIGN KEY ("translation_term_id", "translation_project_locale_id") 
@@ -117,7 +117,7 @@ export class addLabelJoinTables1575734358119 implements MigrationInterface {
         );
         break;
       default:
-        console.log('Unknown DB type');
+        throw new Error(`Unknown DB type: ${config.db.default.type}`);
     }
   }
 
@@ -156,7 +156,7 @@ export class addLabelJoinTables1575734358119 implements MigrationInterface {
         await queryRunner.query('DROP TABLE IF EXISTS "label_terms_term"');
         break;
       default:
-        console.log('Unknown DB type');
+        throw new Error(`Unknown DB type: ${config.db.default.type}`);
     }
   }
 }

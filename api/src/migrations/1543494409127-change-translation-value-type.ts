@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 import { config } from '../config';
-import { DbType } from '../utils/database-type-helper';
+import { DbType, ColumnInfo } from '../utils/database-type-helper';
 
 export class changeTranslationValueType1543494409127 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<any> {
@@ -12,9 +12,9 @@ export class changeTranslationValueType1543494409127 implements MigrationInterfa
       case DbType.MYSQL:
         await queryRunner.query('ALTER TABLE `translation` MODIFY COLUMN `value` text NOT NULL');
         break;
-      case DbType.BETTER_SQLITE3:
-        const tableInfo = await queryRunner.query(`PRAGMA table_info(translation)`);
-        const hasIdColumn = tableInfo.some((col: any) => col.name === 'id');
+      case DbType.BETTER_SQLITE3: {
+        const tableInfo: ColumnInfo[] = await queryRunner.query(`PRAGMA table_info(translation)`);
+        const hasIdColumn = tableInfo.some(col => col.name === 'id');
 
         await queryRunner.query(`PRAGMA foreign_keys=off;`);
 
@@ -53,6 +53,7 @@ export class changeTranslationValueType1543494409127 implements MigrationInterfa
 
         await queryRunner.query(`PRAGMA foreign_keys=on;`);
         break;
+      }
       default:
         throw new Error(`Unsupported DB type "${config.db.default.type}" in migration 1543494409127`);
     }
@@ -70,7 +71,7 @@ export class changeTranslationValueType1543494409127 implements MigrationInterfa
         console.log('No column type change needed for SQLite down migration');
         break;
       default:
-        console.log('Unknown DB type');
+        throw new Error(`Unknown DB type: ${config.db.default.type}`);
     }
   }
 }

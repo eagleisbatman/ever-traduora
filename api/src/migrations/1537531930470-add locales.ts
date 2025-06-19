@@ -1730,11 +1730,23 @@ export class addLocales1537531930470 implements MigrationInterface {
         `);
         break;
       default:
-        console.log('Unknown DB type');
+        throw new Error('Unknown DB type: ' + config.db.default.type);
     }
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.query('DROP TABLE IF EXISTS `locale`');
+    switch (config.db.default.type) {
+      case DbType.POSTGRES:
+        await queryRunner.query('DROP TABLE IF EXISTS "locale"');
+        break;
+      case DbType.BETTER_SQLITE3:
+        await queryRunner.query('DROP TABLE IF EXISTS "locale"');
+        break;
+      case DbType.MYSQL:
+        await queryRunner.query('DROP TABLE IF EXISTS `locale`');
+        break;
+      default:
+        throw new Error('Unknown DB type: ' + config.db.default.type);
+    }
   }
 }

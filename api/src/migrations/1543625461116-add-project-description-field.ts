@@ -15,7 +15,7 @@ export class addProjectDescriptionField1543625461116 implements MigrationInterfa
         await queryRunner.query('ALTER TABLE "project" ADD COLUMN "description" TEXT NULL');
         break;
       default:
-        console.log('Unknown DB type');
+        throw new Error(`Unknown DB type: ${config.db.default.type}`);
     }
   }
 
@@ -66,7 +66,7 @@ export class addProjectDescriptionField1543625461116 implements MigrationInterfa
         `);
         break;
       default:
-        console.log('Unknown DB type');
+        throw new Error(`Unknown DB type: ${config.db.default.type}`);
     }
   }
 }
