@@ -43,6 +43,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Types
 type LocaleCode = "en" | "es" | "fr" | "de";
@@ -155,31 +160,271 @@ function getLocaleFlag(locale: string) {
     pt: "🇵🇹",
     ja: "🇯🇵",
     zh: "🇨🇳",
+    it: "🇮🇹",
+    nl: "🇳🇱",
+    pl: "🇵🇱",
+    ru: "🇷🇺",
+    ko: "🇰🇷",
   };
   return flags[locale] || "🌐";
 }
 
+// Multi-language Translation Editor Component (Tolgee-style)
+function TranslationEditor({
+  term,
+  locales,
+  onTranslationChange,
+  onAITranslate,
+  isTranslating,
+}: {
+  term: Term;
+  locales: typeof projectData.locales;
+  onTranslationChange: (termId: string, locale: LocaleCode, value: string) => void;
+  onAITranslate: (termId: string, targetLocales: LocaleCode[]) => void;
+  isTranslating: string | null;
+}) {
+  const [expandedTerm, setExpandedTerm] = React.useState<string | null>(null);
+  const isExpanded = expandedTerm === term.id;
+
+  const missingLocales = locales
+    .filter((l) => !l.isBase && !term.translations[l.code])
+    .map((l) => l.code);
+
+  return (
+    <Card className={`transition-all ${isExpanded ? "ring-2 ring-primary" : ""}`}>
+      <CardHeader
+        className="cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={() => setExpandedTerm(isExpanded ? null : term.id)}
+      >
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <code className="text-sm font-mono bg-muted px-2 py-0.5 rounded">
+                {term.key}
+              </code>
+              {term.labels.map((label) => (
+                <Badge key={label} variant="outline" className="text-xs">
+                  {label}
+                </Badge>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground">{term.translations.en}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Translation status badges */}
+            <div className="flex gap-1">
+              {locales.map((locale) => (
+                <Tooltip key={locale.code}>
+                  <TooltipTrigger>
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                        locale.isBase || term.translations[locale.code]
+                          ? "bg-green-500/20 text-green-600"
+                          : "bg-yellow-500/20 text-yellow-600"
+                      }`}
+                    >
+                      {getLocaleFlag(locale.code)}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {locale.name}: {term.translations[locale.code] ? "Translated" : "Missing"}
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+            <Icons.chevronDown
+              className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+            />
+          </div>
+        </div>
+      </CardHeader>
+
+      {isExpanded && (
+        <CardContent className="border-t pt-4 space-y-4">
+          {/* AI Translate All Button */}
+          {missingLocales.length > 0 && (
+            <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Icons.globe className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">AI Translation Available</p>
+                  <p className="text-xs text-muted-foreground">
+                    Translate to {missingLocales.length} missing language{missingLocales.length > 1 ? "s" : ""} with Gemini 2.5 Flash
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => onAITranslate(term.id, missingLocales)}
+                disabled={isTranslating === term.id}
+              >
+                {isTranslating === term.id ? (
+                  <>
+                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    Translating...
+                  </>
+                ) : (
+                  <>
+                    <Icons.globe className="mr-2 h-4 w-4" />
+                    Translate All
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* All Languages Grid */}
+          <div className="grid gap-4">
+            {locales.map((locale) => (
+              <div key={locale.code} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <span className="text-lg">{getLocaleFlag(locale.code)}</span>
+                    <span>{locale.name}</span>
+                    {locale.isBase && (
+                      <Badge variant="secondary" className="text-xs">Base</Badge>
+                    )}
+                  </Label>
+                  {!locale.isBase && (
+                    <div className="flex items-center gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => onAITranslate(term.id, [locale.code])}
+                            disabled={isTranslating === term.id}
+                          >
+                            <Icons.globe className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>AI Translate with Gemini</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Icons.copy className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Copy from base</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                </div>
+                <Textarea
+                  value={term.translations[locale.code] || ""}
+                  onChange={(e) => onTranslationChange(term.id, locale.code, e.target.value)}
+                  placeholder={locale.isBase ? "Base translation" : `Enter ${locale.name} translation...`}
+                  className={`min-h-[80px] ${
+                    !locale.isBase && !term.translations[locale.code]
+                      ? "border-yellow-500/50 focus:border-yellow-500"
+                      : ""
+                  }`}
+                  disabled={locale.isBase}
+                />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
 export default function ProjectDetailPage() {
   useParams(); // Used for future API calls
-  const [selectedLocale, setSelectedLocale] = React.useState<LocaleCode>("es");
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [editingTerm, setEditingTerm] = React.useState<string | null>(null);
   const [isAddTermDialogOpen, setIsAddTermDialogOpen] = React.useState(false);
   const [isAddLocaleDialogOpen, setIsAddLocaleDialogOpen] = React.useState(false);
+  const [isTranslating, setIsTranslating] = React.useState<string | null>(null);
+  const [terms, setTerms] = React.useState(projectData.terms);
+  const [filterStatus, setFilterStatus] = React.useState<"all" | "missing" | "complete">("all");
 
-  const filteredTerms = projectData.terms.filter(
-    (term) =>
+  const filteredTerms = terms.filter((term) => {
+    const matchesSearch =
       term.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
       Object.values(term.translations).some((t) =>
         t.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-  );
+      );
+
+    if (!matchesSearch) return false;
+
+    if (filterStatus === "missing") {
+      return projectData.locales.some(
+        (l) => !l.isBase && !term.translations[l.code]
+      );
+    }
+    if (filterStatus === "complete") {
+      return projectData.locales.every(
+        (l) => l.isBase || term.translations[l.code]
+      );
+    }
+    return true;
+  });
 
   const totalProgress = Math.round(
     (projectData.locales.reduce((acc, l) => acc + l.translatedCount, 0) /
       projectData.locales.reduce((acc, l) => acc + l.totalCount, 0)) *
       100
   );
+
+  const handleTranslationChange = (termId: string, locale: LocaleCode, value: string) => {
+    setTerms((prev) =>
+      prev.map((t) =>
+        t.id === termId
+          ? { ...t, translations: { ...t.translations, [locale]: value } }
+          : t
+      )
+    );
+  };
+
+  const handleAITranslate = async (termId: string, targetLocales: LocaleCode[]) => {
+    setIsTranslating(termId);
+
+    // Simulate Gemini 2.5 Flash API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const term = terms.find((t) => t.id === termId);
+    if (!term) return;
+
+    // Mock AI translations (in real implementation, call Gemini API)
+    const aiTranslations: Partial<Record<LocaleCode, string>> = {};
+    for (const locale of targetLocales) {
+      if (locale === "es") aiTranslations[locale] = `[AI] ${term.translations.en} (Spanish)`;
+      if (locale === "fr") aiTranslations[locale] = `[AI] ${term.translations.en} (French)`;
+      if (locale === "de") aiTranslations[locale] = `[AI] ${term.translations.en} (German)`;
+    }
+
+    setTerms((prev) =>
+      prev.map((t) =>
+        t.id === termId
+          ? { ...t, translations: { ...t.translations, ...aiTranslations } }
+          : t
+      )
+    );
+
+    setIsTranslating(null);
+  };
+
+  const handleBatchAITranslate = async () => {
+    // Translate all missing translations
+    for (const term of terms) {
+      const missingLocales = projectData.locales
+        .filter((l) => !l.isBase && !term.translations[l.code])
+        .map((l) => l.code);
+
+      if (missingLocales.length > 0) {
+        await handleAITranslate(term.id, missingLocales);
+      }
+    }
+  };
+
+  const missingCount = terms.reduce((acc, term) => {
+    return acc + projectData.locales.filter((l) => !l.isBase && !term.translations[l.code]).length;
+  }, 0);
 
   return (
     <div className="space-y-6">
@@ -199,6 +444,18 @@ export default function ProjectDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Link href={`/projects/${projectData.id}/import`}>
+            <Button variant="outline">
+              <Icons.upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+          </Link>
+          <Link href={`/projects/${projectData.id}/export`}>
+            <Button variant="outline">
+              <Icons.download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+          </Link>
           <Button variant="outline">
             <Icons.settings className="mr-2 h-4 w-4" />
             Settings
@@ -211,7 +468,7 @@ export default function ProjectDetailPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Terms</CardDescription>
-            <CardTitle className="text-3xl">{projectData.terms.length}</CardTitle>
+            <CardTitle className="text-3xl">{terms.length}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
@@ -222,8 +479,8 @@ export default function ProjectDetailPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Team Members</CardDescription>
-            <CardTitle className="text-3xl">{projectData.teamMembers.length}</CardTitle>
+            <CardDescription>Missing Translations</CardDescription>
+            <CardTitle className="text-3xl text-yellow-600">{missingCount}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
@@ -256,13 +513,17 @@ export default function ProjectDetailPage() {
             <Icons.users className="h-4 w-4" />
             Team
           </TabsTrigger>
+          <TabsTrigger value="integrations" className="gap-2">
+            <Icons.globe className="h-4 w-4" />
+            Integrations
+          </TabsTrigger>
           <TabsTrigger value="api" className="gap-2">
             <Icons.key className="h-4 w-4" />
             API
           </TabsTrigger>
         </TabsList>
 
-        {/* Translations Tab */}
+        {/* Translations Tab - Tolgee-style multi-language editor */}
         <TabsContent value="translations" className="space-y-4">
           {/* Toolbar */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -276,22 +537,24 @@ export default function ProjectDetailPage() {
                   className="pl-10"
                 />
               </div>
-              <Select value={selectedLocale} onValueChange={(value) => setSelectedLocale(value as LocaleCode)}>
-                <SelectTrigger className="w-[180px]">
+              <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as typeof filterStatus)}>
+                <SelectTrigger className="w-[150px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {projectData.locales
-                    .filter((l) => !l.isBase)
-                    .map((locale) => (
-                      <SelectItem key={locale.code} value={locale.code}>
-                        {getLocaleFlag(locale.code)} {locale.name}
-                      </SelectItem>
-                    ))}
+                  <SelectItem value="all">All terms</SelectItem>
+                  <SelectItem value="missing">Missing only</SelectItem>
+                  <SelectItem value="complete">Complete only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center gap-2">
+              {missingCount > 0 && (
+                <Button variant="outline" onClick={handleBatchAITranslate}>
+                  <Icons.globe className="mr-2 h-4 w-4" />
+                  AI Translate All ({missingCount})
+                </Button>
+              )}
               <Dialog open={isAddLocaleDialogOpen} onOpenChange={setIsAddLocaleDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline">
@@ -338,11 +601,11 @@ export default function ProjectDetailPage() {
                     Add Term
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Add a new term</DialogTitle>
                     <DialogDescription>
-                      Create a new translation key for your project.
+                      Create a new translation key with all languages.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
@@ -350,9 +613,17 @@ export default function ProjectDetailPage() {
                       <Label>Key</Label>
                       <Input placeholder="e.g., common.button.save" />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Base translation (English)</Label>
-                      <Textarea placeholder="Enter the base translation" />
+                    <div className="grid gap-4">
+                      {projectData.locales.map((locale) => (
+                        <div key={locale.code} className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <span>{getLocaleFlag(locale.code)}</span>
+                            <span>{locale.name}</span>
+                            {locale.isBase && <Badge variant="secondary" className="text-xs">Base</Badge>}
+                          </Label>
+                          <Textarea placeholder={`Enter ${locale.name} translation...`} />
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <DialogFooter>
@@ -366,7 +637,7 @@ export default function ProjectDetailPage() {
             </div>
           </div>
 
-          {/* Languages progress */}
+          {/* Languages progress bar */}
           <div className="flex flex-wrap gap-2">
             {projectData.locales.map((locale) => (
               <div
@@ -387,99 +658,21 @@ export default function ProjectDetailPage() {
             ))}
           </div>
 
-          {/* Translations table */}
-          <Card>
-            <ScrollArea className="h-[500px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[250px]">Key</TableHead>
-                    <TableHead>English (Base)</TableHead>
-                    <TableHead>
-                      {getLocaleFlag(selectedLocale)}{" "}
-                      {projectData.locales.find((l) => l.code === selectedLocale)?.name}
-                    </TableHead>
-                    <TableHead className="w-[100px]">Status</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTerms.map((term) => (
-                    <TableRow key={term.id}>
-                      <TableCell className="font-mono text-sm">
-                        {term.key}
-                        <div className="flex gap-1 mt-1">
-                          {term.labels.map((label) => (
-                            <Badge key={label} variant="outline" className="text-xs">
-                              {label}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {term.translations.en}
-                      </TableCell>
-                      <TableCell>
-                        {editingTerm === term.id ? (
-                          <div className="flex gap-2">
-                            <Textarea
-                              defaultValue={term.translations[selectedLocale] || ""}
-                              className="min-h-[60px]"
-                            />
-                            <div className="flex flex-col gap-1">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => setEditingTerm(null)}
-                              >
-                                <Icons.check className="h-4 w-4 text-green-500" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => setEditingTerm(null)}
-                              >
-                                <Icons.close className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div
-                            className="cursor-pointer hover:bg-muted/50 rounded p-2 -m-2"
-                            onClick={() => setEditingTerm(term.id)}
-                          >
-                            {term.translations[selectedLocale] || (
-                              <span className="text-muted-foreground italic">
-                                Click to translate...
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {term.translations[selectedLocale] ? (
-                          <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
-                            <Icons.checkCircle className="mr-1 h-3 w-3" />
-                            Done
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600">
-                            <Icons.alertCircle className="mr-1 h-3 w-3" />
-                            Missing
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon">
-                          <Icons.moreVertical className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          </Card>
+          {/* Translations list - Expandable cards with all languages */}
+          <ScrollArea className="h-[600px]">
+            <div className="space-y-3 pr-4">
+              {filteredTerms.map((term) => (
+                <TranslationEditor
+                  key={term.id}
+                  term={term}
+                  locales={projectData.locales}
+                  onTranslationChange={handleTranslationChange}
+                  onAITranslate={handleAITranslate}
+                  isTranslating={isTranslating}
+                />
+              ))}
+            </div>
+          </ScrollArea>
         </TabsContent>
 
         {/* Terms Tab */}
@@ -505,7 +698,7 @@ export default function ProjectDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {projectData.terms.map((term) => (
+                {terms.map((term) => (
                   <TableRow key={term.id}>
                     <TableCell className="font-mono">{term.key}</TableCell>
                     <TableCell>
@@ -555,7 +748,7 @@ export default function ProjectDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    {projectData.terms.filter((t) => t.labels.includes(label)).length} terms
+                    {terms.filter((t) => t.labels.includes(label)).length} terms
                   </p>
                 </CardContent>
               </Card>
@@ -608,6 +801,102 @@ export default function ProjectDetailPage() {
               </TableBody>
             </Table>
           </Card>
+        </TabsContent>
+
+        {/* Integrations Tab - Figma + AI */}
+        <TabsContent value="integrations" className="space-y-4">
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Figma Integration */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#F24E1E]/10 rounded-lg">
+                    <svg className="h-6 w-6" viewBox="0 0 38 57" fill="none">
+                      <path d="M19 28.5C19 23.2533 23.2533 19 28.5 19C33.7467 19 38 23.2533 38 28.5C38 33.7467 33.7467 38 28.5 38C23.2533 38 19 33.7467 19 28.5Z" fill="#1ABCFE"/>
+                      <path d="M0 47.5C0 42.2533 4.25329 38 9.5 38H19V47.5C19 52.7467 14.7467 57 9.5 57C4.25329 57 0 52.7467 0 47.5Z" fill="#0ACF83"/>
+                      <path d="M19 0V19H28.5C33.7467 19 38 14.7467 38 9.5C38 4.25329 33.7467 0 28.5 0H19Z" fill="#FF7262"/>
+                      <path d="M0 9.5C0 14.7467 4.25329 19 9.5 19H19V0H9.5C4.25329 0 0 4.25329 0 9.5Z" fill="#F24E1E"/>
+                      <path d="M0 28.5C0 33.7467 4.25329 38 9.5 38H19V19H9.5C4.25329 19 0 23.2533 0 28.5Z" fill="#A259FF"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <CardTitle>Figma</CardTitle>
+                    <CardDescription>Sync translations with your Figma designs</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Connect your Figma files to automatically sync translations and see how text fits in your designs.
+                </p>
+                <div className="flex gap-2">
+                  <Button>
+                    <Icons.plus className="mr-2 h-4 w-4" />
+                    Connect Figma
+                  </Button>
+                  <Button variant="outline">Learn More</Button>
+                </div>
+                <div className="rounded-lg border p-4 bg-muted/30">
+                  <h4 className="font-medium mb-2">Features</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Import text layers from Figma</li>
+                    <li>• Preview translations in design context</li>
+                    <li>• Export translations back to Figma</li>
+                    <li>• Detect text overflow issues</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* AI Translation */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Icons.globe className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>AI Translation</CardTitle>
+                    <CardDescription>Powered by Gemini 2.5 Flash</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Use Google&apos;s Gemini 2.5 Flash to automatically translate your content with high accuracy and context awareness.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">API Status</span>
+                    <Badge className="bg-green-500/10 text-green-600">Connected</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Model</span>
+                    <span className="text-sm font-mono">gemini-2.5-flash</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Translations this month</span>
+                    <span className="text-sm">1,234 / 10,000</span>
+                  </div>
+                </div>
+                <div className="pt-2">
+                  <Button variant="outline" className="w-full">
+                    <Icons.settings className="mr-2 h-4 w-4" />
+                    Configure AI Settings
+                  </Button>
+                </div>
+                <div className="rounded-lg border p-4 bg-muted/30">
+                  <h4 className="font-medium mb-2">Capabilities</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Context-aware translations</li>
+                    <li>• Preserves formatting & variables</li>
+                    <li>• Handles pluralization rules</li>
+                    <li>• Maintains brand voice consistency</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* API Tab */}
