@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useTheme } from "next-themes";
-import { Icons } from "@/components/icons";
+import { Menu, Search, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,14 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ModeToggle } from "@/components/mode-toggle";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
 }
 
 export function Header({ onToggleSidebar }: HeaderProps) {
-  const { setTheme, theme } = useTheme();
-
   return (
     <header className="flex h-16 items-center justify-between border-b bg-background px-4 lg:px-6">
       {/* Left side */}
@@ -32,12 +30,12 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           onClick={onToggleSidebar}
           className="lg:hidden"
         >
-          <Icons.menu className="h-5 w-5" />
+          <Menu className="h-5 w-5" />
         </Button>
 
         {/* Search */}
         <div className="relative hidden md:block">
-          <Icons.search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search projects..."
             className="w-64 pl-10"
@@ -47,16 +45,8 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-2">
-        {/* Theme toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          <Icons.sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Icons.moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
+        {/* Theme toggle - Shadcn mode-toggle pattern */}
+        <ModeToggle />
 
         {/* User menu */}
         <DropdownMenu>
@@ -81,12 +71,12 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <Icons.settings className="mr-2 h-4 w-4" />
+              <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">
-              <Icons.logout className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>

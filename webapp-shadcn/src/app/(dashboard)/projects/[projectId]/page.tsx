@@ -3,7 +3,24 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Icons } from "@/components/icons";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Copy,
+  FileText,
+  Globe,
+  Key,
+  Languages,
+  Loader2,
+  MoreVertical,
+  Plus,
+  Search,
+  Settings,
+  Tag,
+  Upload,
+  Download,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -232,7 +249,7 @@ function TranslationEditor({
                 </Tooltip>
               ))}
             </div>
-            <Icons.chevronDown
+            <ChevronDown
               className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
             />
           </div>
@@ -246,7 +263,7 @@ function TranslationEditor({
             <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20">
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-primary/10 rounded-lg">
-                  <Icons.globe className="h-4 w-4 text-primary" />
+                  <Globe className="h-4 w-4 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">AI Translation Available</p>
@@ -262,12 +279,12 @@ function TranslationEditor({
               >
                 {isTranslating === term.id ? (
                   <>
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Translating...
                   </>
                 ) : (
                   <>
-                    <Icons.globe className="mr-2 h-4 w-4" />
+                    <Globe className="mr-2 h-4 w-4" />
                     Translate All
                   </>
                 )}
@@ -298,7 +315,7 @@ function TranslationEditor({
                             onClick={() => onAITranslate(term.id, [locale.code])}
                             disabled={isTranslating === term.id}
                           >
-                            <Icons.globe className="h-4 w-4" />
+                            <Globe className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>AI Translate with Gemini</TooltipContent>
@@ -306,7 +323,7 @@ function TranslationEditor({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Icons.copy className="h-4 w-4" />
+                            <Copy className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>Copy from base</TooltipContent>
@@ -433,7 +450,7 @@ export default function ProjectDetailPage() {
         <div className="flex items-center gap-4">
           <Link href="/projects">
             <Button variant="ghost" size="icon">
-              <Icons.arrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
           <div>
@@ -446,18 +463,18 @@ export default function ProjectDetailPage() {
         <div className="flex items-center gap-2">
           <Link href={`/projects/${projectData.id}/import`}>
             <Button variant="outline">
-              <Icons.upload className="mr-2 h-4 w-4" />
+              <Upload className="mr-2 h-4 w-4" />
               Import
             </Button>
           </Link>
           <Link href={`/projects/${projectData.id}/export`}>
             <Button variant="outline">
-              <Icons.download className="mr-2 h-4 w-4" />
+              <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
           </Link>
           <Button variant="outline">
-            <Icons.settings className="mr-2 h-4 w-4" />
+            <Settings className="mr-2 h-4 w-4" />
             Settings
           </Button>
         </div>
@@ -498,27 +515,27 @@ export default function ProjectDetailPage() {
       <Tabs defaultValue="translations" className="space-y-4">
         <TabsList>
           <TabsTrigger value="translations" className="gap-2">
-            <Icons.languages className="h-4 w-4" />
+            <Languages className="h-4 w-4" />
             Translations
           </TabsTrigger>
           <TabsTrigger value="terms" className="gap-2">
-            <Icons.file className="h-4 w-4" />
+            <FileText className="h-4 w-4" />
             Terms
           </TabsTrigger>
           <TabsTrigger value="labels" className="gap-2">
-            <Icons.tag className="h-4 w-4" />
+            <Tag className="h-4 w-4" />
             Labels
           </TabsTrigger>
           <TabsTrigger value="team" className="gap-2">
-            <Icons.users className="h-4 w-4" />
+            <Users className="h-4 w-4" />
             Team
           </TabsTrigger>
           <TabsTrigger value="integrations" className="gap-2">
-            <Icons.globe className="h-4 w-4" />
+            <Globe className="h-4 w-4" />
             Integrations
           </TabsTrigger>
           <TabsTrigger value="api" className="gap-2">
-            <Icons.key className="h-4 w-4" />
+            <Key className="h-4 w-4" />
             API
           </TabsTrigger>
         </TabsList>
@@ -529,7 +546,7 @@ export default function ProjectDetailPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-1 items-center gap-4">
               <div className="relative flex-1 max-w-md">
-                <Icons.search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search terms or translations..."
                   value={searchQuery}
@@ -551,14 +568,14 @@ export default function ProjectDetailPage() {
             <div className="flex items-center gap-2">
               {missingCount > 0 && (
                 <Button variant="outline" onClick={handleBatchAITranslate}>
-                  <Icons.globe className="mr-2 h-4 w-4" />
+                  <Globe className="mr-2 h-4 w-4" />
                   AI Translate All ({missingCount})
                 </Button>
               )}
               <Dialog open={isAddLocaleDialogOpen} onOpenChange={setIsAddLocaleDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline">
-                    <Icons.plus className="mr-2 h-4 w-4" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Add Language
                   </Button>
                 </DialogTrigger>
@@ -597,7 +614,7 @@ export default function ProjectDetailPage() {
               <Dialog open={isAddTermDialogOpen} onOpenChange={setIsAddTermDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
-                    <Icons.plus className="mr-2 h-4 w-4" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Add Term
                   </Button>
                 </DialogTrigger>
@@ -679,11 +696,11 @@ export default function ProjectDetailPage() {
         <TabsContent value="terms" className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="relative max-w-md flex-1">
-              <Icons.search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search terms..." className="pl-10" />
             </div>
             <Button>
-              <Icons.plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               Add Term
             </Button>
           </div>
@@ -716,7 +733,7 @@ export default function ProjectDetailPage() {
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon">
-                        <Icons.moreVertical className="h-4 w-4" />
+                        <MoreVertical className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -733,7 +750,7 @@ export default function ProjectDetailPage() {
               Organize your terms with labels for better management.
             </p>
             <Button>
-              <Icons.plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               Add Label
             </Button>
           </div>
@@ -743,7 +760,7 @@ export default function ProjectDetailPage() {
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-lg">{label}</CardTitle>
                   <Button variant="ghost" size="icon">
-                    <Icons.moreVertical className="h-4 w-4" />
+                    <MoreVertical className="h-4 w-4" />
                   </Button>
                 </CardHeader>
                 <CardContent>
@@ -763,7 +780,7 @@ export default function ProjectDetailPage() {
               Manage team members and their access levels.
             </p>
             <Button>
-              <Icons.plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               Invite Member
             </Button>
           </div>
@@ -793,7 +810,7 @@ export default function ProjectDetailPage() {
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon">
-                        <Icons.moreVertical className="h-4 w-4" />
+                        <MoreVertical className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -831,7 +848,7 @@ export default function ProjectDetailPage() {
                 </p>
                 <div className="flex gap-2">
                   <Button>
-                    <Icons.plus className="mr-2 h-4 w-4" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Connect Figma
                   </Button>
                   <Button variant="outline">Learn More</Button>
@@ -853,7 +870,7 @@ export default function ProjectDetailPage() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
-                    <Icons.globe className="h-6 w-6 text-primary" />
+                    <Globe className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                     <CardTitle>AI Translation</CardTitle>
@@ -881,7 +898,7 @@ export default function ProjectDetailPage() {
                 </div>
                 <div className="pt-2">
                   <Button variant="outline" className="w-full">
-                    <Icons.settings className="mr-2 h-4 w-4" />
+                    <Settings className="mr-2 h-4 w-4" />
                     Configure AI Settings
                   </Button>
                 </div>
@@ -906,7 +923,7 @@ export default function ProjectDetailPage() {
               Manage API clients for programmatic access.
             </p>
             <Button>
-              <Icons.plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               Create API Client
             </Button>
           </div>
@@ -932,7 +949,7 @@ export default function ProjectDetailPage() {
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon">
-                        <Icons.moreVertical className="h-4 w-4" />
+                        <MoreVertical className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
