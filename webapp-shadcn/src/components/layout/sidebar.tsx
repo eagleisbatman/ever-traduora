@@ -3,8 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Globe, FolderOpen, Settings, LogOut, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -17,16 +17,22 @@ interface SidebarProps {
   isCollapsed: boolean;
 }
 
-const navItems = [
+interface NavItem {
+  title: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+const navItems: NavItem[] = [
   {
     title: "Projects",
     href: "/projects",
-    icon: Icons.folder,
+    icon: FolderOpen,
   },
   {
     title: "Settings",
     href: "/settings",
-    icon: Icons.settings,
+    icon: Settings,
   },
 ];
 
@@ -43,7 +49,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
       {/* Logo */}
       <div className={cn("flex h-16 items-center border-b px-4", isCollapsed && "justify-center")}>
         <Link href="/projects" className="flex items-center gap-2">
-          <Icons.globe className="h-6 w-6 text-primary" />
+          <Globe className="h-6 w-6 text-primary" />
           {!isCollapsed && (
             <span className="text-lg font-semibold">Traduora</span>
           )}
@@ -105,14 +111,14 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="w-10 h-10">
-                <Icons.logout className="h-5 w-5" />
+                <LogOut className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">Sign out</TooltipContent>
           </Tooltip>
         ) : (
           <Button variant="ghost" className="w-full justify-start gap-3">
-            <Icons.logout className="h-5 w-5" />
+            <LogOut className="h-5 w-5" />
             Sign out
           </Button>
         )}
