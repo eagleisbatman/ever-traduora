@@ -3,7 +3,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { termsApi, AddTermRequest, UpdateTermRequest, Term } from '@/lib/api';
+import { termsApi, AddTermRequest, UpdateTermRequest } from '@/lib/api';
 
 export function useTerms(projectId: string) {
   return useQuery({

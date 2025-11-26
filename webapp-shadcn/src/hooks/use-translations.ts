@@ -3,7 +3,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { localesApi, translationsApi, AddLocaleRequest, UpdateTranslationRequest, Locale, Translation } from '@/lib/api';
+import { localesApi, translationsApi, AddLocaleRequest, UpdateTranslationRequest } from '@/lib/api';
 
 export function useLocales(projectId: string) {
   return useQuery({

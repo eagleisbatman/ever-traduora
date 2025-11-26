@@ -3,7 +3,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { projectsApi, CreateProjectRequest, Project } from '@/lib/api';
+import { projectsApi, CreateProjectRequest } from '@/lib/api';
 
 export function useProjects() {
   return useQuery({

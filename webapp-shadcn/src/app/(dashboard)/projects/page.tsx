@@ -48,12 +48,6 @@ function getLocaleFlag(locale: string) {
 function useProjectStats(projectId: string) {
   const { data: locales } = useLocales(projectId);
   const { data: terms } = useTerms(projectId);
-  const { data: translations } = React.useMemo(() => {
-    if (!locales || locales.length === 0) return { en: [], vi: [] };
-    // For now, we'll calculate stats from terms and locales
-    // Full translation data would require fetching all locale translations
-    return { en: [], vi: [] };
-  }, [locales]);
 
   const termsCount = terms?.length || 0;
   const localesCount = locales?.length || 0;
@@ -63,7 +57,6 @@ function useProjectStats(projectId: string) {
     termsCount,
     localesCount,
     localeCodes,
-    locales,
   };
 }
 
@@ -92,10 +85,11 @@ export default function ProjectsPage() {
       setIsCreateDialogOpen(false);
       setNewProjectName("");
       setNewProjectDescription("");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create project";
       toast({
         title: "Error",
-        description: error.message || "Failed to create project",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -246,7 +240,6 @@ export default function ProjectsPage() {
 // Separate component for project card to fetch its stats
 function ProjectCard({ project }: { project: { id: string; name: string; description?: string } }) {
   const { termsCount, localeCodes } = useProjectStats(project.id);
-  const { data: locales } = useLocales(project.id);
 
   // Calculate translation progress (simplified - would need full translation data)
   const translatedPercentage = 0; // Placeholder
