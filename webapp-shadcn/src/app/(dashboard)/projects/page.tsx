@@ -24,50 +24,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-
-// Mock data for projects
-const projects = [
-  {
-    id: "1",
-    name: "Mobile App",
-    description: "iOS and Android mobile application",
-    locales: ["en", "es", "fr", "de"],
-    termsCount: 245,
-    translatedPercentage: 87,
-    updatedAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Web Dashboard",
-    description: "Admin dashboard for the main platform",
-    locales: ["en", "es", "pt"],
-    termsCount: 182,
-    translatedPercentage: 95,
-    updatedAt: "2024-01-14",
-  },
-  {
-    id: "3",
-    name: "Marketing Website",
-    description: "Public marketing and landing pages",
-    locales: ["en", "es", "fr", "de", "ja", "zh"],
-    termsCount: 89,
-    translatedPercentage: 62,
-    updatedAt: "2024-01-12",
-  },
-  {
-    id: "4",
-    name: "Email Templates",
-    description: "Transactional and marketing emails",
-    locales: ["en", "es"],
-    termsCount: 56,
-    translatedPercentage: 100,
-    updatedAt: "2024-01-10",
-  },
-];
+import { useProjects, useCreateProject } from "@/hooks/use-projects";
+import { useLocales } from "@/hooks/use-translations";
+import { useTerms } from "@/hooks/use-terms";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 function getLocaleFlag(locale: string) {
   const flags: Record<string, string> = {
     en: "🇺🇸",
+    vi: "🇻🇳",
     es: "🇪🇸",
     fr: "🇫🇷",
     de: "🇩🇪",
@@ -78,25 +44,91 @@ function getLocaleFlag(locale: string) {
   return flags[locale] || "🌐";
 }
 
+// Helper hook to get project stats
+function useProjectStats(projectId: string) {
+  const { data: locales } = useLocales(projectId);
+  const { data: terms } = useTerms(projectId);
+  const { data: translations } = React.useMemo(() => {
+    if (!locales || locales.length === 0) return { en: [], vi: [] };
+    // For now, we'll calculate stats from terms and locales
+    // Full translation data would require fetching all locale translations
+    return { en: [], vi: [] };
+  }, [locales]);
+
+  const termsCount = terms?.length || 0;
+  const localesCount = locales?.length || 0;
+  const localeCodes = locales?.map((l) => l.locale.code) || [];
+
+  return {
+    termsCount,
+    localesCount,
+    localeCodes,
+    locales,
+  };
+}
+
 export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
   const [newProjectName, setNewProjectName] = React.useState("");
   const [newProjectDescription, setNewProjectDescription] = React.useState("");
+  const { toast } = useToast();
 
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { data: projects, isLoading, error } = useProjects();
+  const createProject = useCreateProject();
 
-  const handleCreateProject = () => {
-    // Handle project creation - replace with actual API call
-    console.log("Creating project:", { newProjectName, newProjectDescription });
-    setIsCreateDialogOpen(false);
-    setNewProjectName("");
-    setNewProjectDescription("");
+  const handleCreateProject = async () => {
+    if (!newProjectName.trim()) return;
+
+    try {
+      await createProject.mutateAsync({
+        name: newProjectName,
+        description: newProjectDescription || undefined,
+      });
+      toast({
+        title: "Project created",
+        description: `${newProjectName} has been created successfully.`,
+      });
+      setIsCreateDialogOpen(false);
+      setNewProjectName("");
+      setNewProjectDescription("");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create project",
+        variant: "destructive",
+      });
+    }
   };
+
+  const filteredProjects = React.useMemo(() => {
+    if (!projects) return [];
+    return projects.filter(
+      (project) =>
+        project.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [projects, searchQuery]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="flex flex-col items-center justify-center py-12">
+        <Icons.folder className="h-12 w-12 text-muted-foreground/50" />
+        <h3 className="mt-4 text-lg font-semibold">Error loading projects</h3>
+        <p className="text-muted-foreground">
+          {error instanceof Error ? error.message : "Failed to load projects"}
+        </p>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -144,11 +176,25 @@ export default function ProjectsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+                disabled={createProject.isPending}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateProject} disabled={!newProjectName}>
-                Create project
+              <Button
+                onClick={handleCreateProject}
+                disabled={!newProjectName || createProject.isPending}
+              >
+                {createProject.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create project"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -167,7 +213,7 @@ export default function ProjectsPage() {
       </div>
 
       {/* Projects grid */}
-      {filteredProjects.length === 0 ? (
+      {!projects || filteredProjects.length === 0 ? (
         <Card className="flex flex-col items-center justify-center py-12">
           <Icons.folder className="h-12 w-12 text-muted-foreground/50" />
           <h3 className="mt-4 text-lg font-semibold">No projects found</h3>
@@ -177,7 +223,10 @@ export default function ProjectsPage() {
               : "Get started by creating a new project"}
           </p>
           {!searchQuery && (
-            <Button className="mt-4" onClick={() => setIsCreateDialogOpen(true)}>
+            <Button
+              className="mt-4"
+              onClick={() => setIsCreateDialogOpen(true)}
+            >
               <Icons.plus className="mr-2 h-4 w-4" />
               Create your first project
             </Button>
@@ -186,57 +235,70 @@ export default function ProjectsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredProjects.map((project) => (
-            <Link key={project.id} href={`/projects/${project.id}`}>
-              <Card className="h-full transition-all hover:border-primary/50 hover:shadow-md cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg">{project.name}</CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {project.description}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Locales */}
-                  <div className="flex flex-wrap gap-1">
-                    {project.locales.slice(0, 4).map((locale) => (
-                      <Badge key={locale} variant="secondary" className="text-xs">
-                        {getLocaleFlag(locale)} {locale.toUpperCase()}
-                      </Badge>
-                    ))}
-                    {project.locales.length > 4 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{project.locales.length - 4}
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Stats */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {project.termsCount} terms
-                      </span>
-                      <span className="font-medium">
-                        {project.translatedPercentage}% translated
-                      </span>
-                    </div>
-                    <Progress value={project.translatedPercentage} className="h-2" />
-                  </div>
-
-                  {/* Updated */}
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Icons.clock className="h-3 w-3" />
-                    Updated {project.updatedAt}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+            <ProjectCard key={project.id} project={project} />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+// Separate component for project card to fetch its stats
+function ProjectCard({ project }: { project: { id: string; name: string; description?: string } }) {
+  const { termsCount, localeCodes } = useProjectStats(project.id);
+  const { data: locales } = useLocales(project.id);
+
+  // Calculate translation progress (simplified - would need full translation data)
+  const translatedPercentage = 0; // Placeholder
+
+  return (
+    <Link href={`/projects/${project.id}`}>
+      <Card className="h-full transition-all hover:border-primary/50 hover:shadow-md cursor-pointer">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-lg">{project.name}</CardTitle>
+              <CardDescription className="line-clamp-2">
+                {project.description || "No description"}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Locales */}
+          {localeCodes.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {localeCodes.slice(0, 4).map((locale) => (
+                <Badge key={locale} variant="secondary" className="text-xs">
+                  {getLocaleFlag(locale)} {locale.toUpperCase()}
+                </Badge>
+              ))}
+              {localeCodes.length > 4 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{localeCodes.length - 4}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Stats */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {termsCount} terms
+              </span>
+              {translatedPercentage > 0 && (
+                <span className="font-medium">
+                  {translatedPercentage}% translated
+                </span>
+              )}
+            </div>
+            {translatedPercentage > 0 && (
+              <Progress value={translatedPercentage} className="h-2" />
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
